@@ -1,0 +1,12 @@
+# Ambiente virtual
+venv/
+
+# Arquivos de sistema
+__pycache__/
+*.pyc
+
+# Dependências do frontend
+node_modules/
+
+# Arquivos de mídia e uploads
+swapp-be/media/
