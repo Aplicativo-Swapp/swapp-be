@@ -1,0 +1,72 @@
+version: '3.8'
+
+services:
+  auth_service:
+    build:
+      context: ../auth_service
+      dockerfile: ../docker/Dockerfile.auth
+    volumes:
+      - ../auth_service:/app
+    container_name: auth_service
+    env_file:
+      - ../envs/.env_auth
+    ports:
+      - "8000:8000"
+    environment:
+      - PYTHONUNBUFFERED=1
+    stdin_open: true
+    tty: true
+    # depends_on:
+    #   - db
+
+  profile_service:
+    build:
+      context: ../profile_service
+      dockerfile: ../docker/Dockerfile.profile
+    volumes:
+      - ../profile_service:/app
+    container_name: profile_service
+    env_file:
+      - ../envs/.env_profile
+    ports:
+      - "8001:8001"
+      # - "8001:8000"
+    environment:
+      - PYTHONUNBUFFERED=1
+    stdin_open: true
+    tty: true
+    # depends_on:
+    #   - db
+
+  trade_service:
+    build:
+      context: ../trade_service
+      dockerfile: ../docker/Dockerfile.trade
+    volumes:
+      - ../trade_service:/app
+    container_name: trade_service
+    env_file:
+      - ../envs/.env_trade
+    ports:
+      - "8002:8002"
+      # - "8002:8000"
+    environment:
+      - PYTHONUNBUFFERED=1
+    stdin_open: true
+    tty: true
+    # depends_on:
+    #   - db
+
+  # db:
+  #   image: postgres:13
+  #   container_name: postgres_db
+  #   env_file:
+  #     - ../envs/.env_db
+  #   ports:
+  #     - "5432:5432"
+  #   volumes:
+  #     - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:
+
