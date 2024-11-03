@@ -5,6 +5,7 @@ services:
     build:
       context: ../auth_service
       dockerfile: ../docker/Dockerfile.auth
+    user: "${UID}:${GID}"
     volumes:
       - ../auth_service:/app
     container_name: auth_service
@@ -23,6 +24,7 @@ services:
     build:
       context: ../profile_service
       dockerfile: ../docker/Dockerfile.profile
+    user: "${UID}:${GID}"
     volumes:
       - ../profile_service:/app
     container_name: profile_service
@@ -42,6 +44,7 @@ services:
     build:
       context: ../trade_service
       dockerfile: ../docker/Dockerfile.trade
+    user: "${UID}:${GID}"
     volumes:
       - ../trade_service:/app
     container_name: trade_service
