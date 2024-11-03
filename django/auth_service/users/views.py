@@ -7,15 +7,18 @@ from rest_framework import status
 from .serializers import UserSerializer
 from .models import User
 
-class UserView(APIView):
-    def get(self, request):
-        users = User.objects.all()
-        serializer = UserSerializer(users, many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+class UserRegistrationView(APIView):
+    """
+        Class to handle user registration.
+    """
     
     def post(self, request):
-        serializer = UserSerializer(data=request.data)
+        """
+            Method to handle POST request for user registration.
+        """
         
+        serializer = UserSerializer(data=request.data)
+
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
