@@ -28,6 +28,6 @@ jobs:
     - name: Run Tests
       run: |
 
-        export PYTHONPATH=$PYTHONPATH:./django/
+        export PYTHONPATH=$PYTHONPATH:$(pwd)/django/auth_service
         export DJANGO_SETTINGS_MODULE='auth_service.auth_service.settings'
         python django/auth_service/manage.py test users
