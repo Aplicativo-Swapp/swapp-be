@@ -27,5 +27,5 @@ jobs:
         pip install -r django/auth_service/requirements.txt
     - name: Run Tests
       run: |
-        export DJANGO_SETTINGS_MODULE='django/auth_service/auth_service/settings.py'
+        export DJANGO_SETTINGS_MODULE='auth_service.auth_service.settings'
         python django/auth_service/users/tests.py test
