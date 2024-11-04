@@ -3,10 +3,10 @@ name: CI
 on:
   push:
     branches:
-      - main
+      - '*'
   pull_request:
     branches:
-      - main
+      - '*'
 
 jobs:
   build:
@@ -24,7 +24,7 @@ jobs:
 
       - name: CD to springboot dir
         run: cd springboot/helloworld
-        
+
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
