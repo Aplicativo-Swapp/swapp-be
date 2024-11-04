@@ -22,11 +22,14 @@ jobs:
           java-version: '17' # Altere para a versão do Java que você estiver usando
           distribution: 'temurin' # ou 'adopt' ou 'zulu'
 
+      - name: pwd
+        run: pwd
+
       - name: CD to springboot dir
         run: cd springboot/helloworld/
 
-      - name: ls
-        run: ls
+      - name: pwd
+        run: pwd
 
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
