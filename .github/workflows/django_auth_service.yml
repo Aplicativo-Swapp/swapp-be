@@ -28,4 +28,4 @@ jobs:
     - name: Run Tests
       run: |
 
-        python django/auth_service/manage.py test
+        python django/auth_service/auth_service/users/testss.py test
