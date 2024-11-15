@@ -2,3 +2,4 @@ Django
 djangorestframework
 django-allauth
 python-dotenv
+django-cors-headers

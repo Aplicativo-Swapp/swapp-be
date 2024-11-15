@@ -1,4 +1,5 @@
 from rest_framework import serializers
+from rest_framework.exceptions import ValidationError
 from .models import User
 
 class UserSerializer(serializers.ModelSerializer):
@@ -16,8 +17,8 @@ class UserSerializer(serializers.ModelSerializer):
         
         model = User
         fields = [
-            'first_name', 'last_name', 'cpf', 'email', 'password',
-            'address', 'contact', 'gender', 'birth_date'
+            'first_name', 'last_name', 'email', 'password',
+            'cpf', 'address', 'contact', 'gender', 'state', 'city'
         ]
         extra_kwargs = {
             'password': {'write_only': True}
@@ -27,6 +28,9 @@ class UserSerializer(serializers.ModelSerializer):
         """
             Create and return a new user instance, given the validated data.
         """
+
+        if User.objects.filter(email=validated_data['email']).exists():
+            raise ValidationError({"email": "Este email já está em uso."})
 
         password = validated_data.pop('password')
         user = User.objects.create(**validated_data)

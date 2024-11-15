@@ -8,7 +8,7 @@ import datetime
 # Testing the UserRegistrationView
 class UserRegistrationTestCase(APITestCase):
     def setUp(self):
-        self.url = reverse('user-register') # Get the URL of the user-register endpoint
+        self.url = reverse('register') # Get the URL of the user-register endpoint
 
         # Define valid user data
         self.user_data = {
@@ -20,7 +20,8 @@ class UserRegistrationTestCase(APITestCase):
             "address": "Rua Exemplo, 123",
             "contact": "11987654321",
             "gender": "Masculino",
-            "birth_date": "2003-05-03"
+            "state": "SP",
+            "city": "São Paulo",
         }
 
     def test_user_registration(self):
@@ -43,7 +44,8 @@ class UserRegistrationTestCase(APITestCase):
         self.assertEqual(user.address, self.user_data['address'])
         self.assertEqual(user.contact, self.user_data['contact'])
         self.assertEqual(user.gender, self.user_data['gender'])
-        self.assertEqual(user.birth_date, datetime.date.fromisoformat(self.user_data['birth_date']))
+        self.assertEqual(user.state, self.user_data['state'])
+        self.assertEqual(user.city, self.user_data['city'])
 
     def test_user_registration_invalid_data(self):
         incomplete_user_data = self.user_data.copy()
