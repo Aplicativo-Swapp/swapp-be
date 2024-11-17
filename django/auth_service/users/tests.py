@@ -8,7 +8,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from .models import User
 import datetime
 
-#### Testing the UserRegistrationView
+############################# Testing the UserRegistrationView #############################
 class UserRegistrationTestCase(APITestCase):
     def setUp(self):
         self.url = reverse('register') # Get the URL of the user-register endpoint
@@ -60,7 +60,7 @@ class UserRegistrationTestCase(APITestCase):
         # Check that the response status code is 400 (BAD REQUEST)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
-#### Testing the UserLoginView
+############################# Testing the UserLoginView #############################
 User = get_user_model()
 
 class UserLoginTestCase(APITestCase):
@@ -158,3 +158,63 @@ class UserLoginTestCase(APITestCase):
         # Decode the token to check if it is valid
         token = RefreshToken(refresh_token)
         self.assertEqual(token["user_id"], self.user.id)
+
+############################# Testing the UserLogoutView #############################
+User = get_user_model()
+
+class UserLogoutTestCase(APITestCase):
+    def setUp(self):
+        """
+            Setup is called before each test. Creates a user to test the logout.
+        """
+
+        self.user = User.objects.create_user(
+            first_name="Jhon",
+            last_name="Doe",
+            email="jhondoe@example.com",
+            cpf="12345678901",
+            password="securepassword"
+        )
+
+        self.login_url = "/api/users/login/"
+        self.logout_url = "/api/users/logout/"
+
+        # Generate tokens for the user manually
+        self.tokens = RefreshToken.for_user(self.user)
+        self.refresh_token = str(self.tokens)
+        self.access_token = str(self.tokens.access_token)
+
+    def test_logout_successful(self):
+        """
+            Test the sucessful logout invalidating the refresh token.
+        """
+        data = {"refresh": self.refresh_token}
+        self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {self.access_token}") # Set the access token in the header
+        response = self.client.post(self.logout_url, data) # Send the request with the refresh token
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["detail"], "Logout realizado com sucesso.")
+
+    def test_logout_missing_refresh_token(self):
+        """
+            Test the logout when the refresh token is missing.
+        """
+
+        data = {} # Empty data
+        self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {self.access_token}") 
+        response = self.client.post(self.logout_url, data)
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.data["detail"], "Refresh Token é obrigatório para logout.")
+
+    def test_logout_invalid_refresh_token(self):
+        """
+            Test the logout when the refresh token is invalid.
+        """
+        
+        data = {"refresh": "invalidtoken"} # Invalid refresh token
+        self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {self.access_token}")
+        response = self.client.post(self.logout_url, data)
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.data["detail"], "Erro ao realizar logout.")

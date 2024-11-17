@@ -5,6 +5,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.exceptions import AuthenticationFailed
+from rest_framework.permissions import IsAuthenticated
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from .serializers import UserSerializer
@@ -72,8 +73,26 @@ class UserLogoutView(APIView):
         Class to handle user logout.
     """
     
-    def post(self, request):
+    permission_classes = [IsAuthenticated] # Only authenticated users can logout
+
+    def post(self, request, *args, **kwargs):
         """
             Method to handle POST request for user logout.
         """
-        return Response({"message": "Logout efetuado com sucesso!"}, status=status.HTTP_200_OK)   
+        try:
+            # Recover the refresh token from the request body
+            refresh_token = request.data.get("refresh")
+            if not refresh_token:
+                return Response(
+                    {"detail": "Refresh Token é obrigatório para logout."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            
+            # Invalidate the refresh token
+            token = RefreshToken(refresh_token)  
+            token.blacklist()  # Add the token to the blacklist of tokens (revocation list)
+
+            return Response({"detail": "Logout realizado com sucesso."}, status=status.HTTP_200_OK)
+
+        except Exception as e:
+            return Response({"detail": "Erro ao realizar logout."}, status=status.HTTP_400_BAD_REQUEST)
