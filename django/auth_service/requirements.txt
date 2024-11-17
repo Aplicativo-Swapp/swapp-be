@@ -4,3 +4,4 @@ django-allauth
 python-dotenv
 django-cors-headers
 djangorestframework-simplejwt
+psycopg2-binary

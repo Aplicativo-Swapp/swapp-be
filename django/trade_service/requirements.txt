@@ -2,3 +2,6 @@ Django==4.0
 djangorestframework==3.13.1
 django-allauth==0.47.0
 python-dotenv
+django-cors-headers
+djangorestframework-simplejwt
+psycopg2-binary

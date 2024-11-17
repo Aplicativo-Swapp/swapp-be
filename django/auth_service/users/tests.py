@@ -1,6 +1,8 @@
 from django.urls import reverse
 from django.contrib.auth import get_user_model
 
+from django.db import connection
+
 from rest_framework import status
 from rest_framework.test import APITestCase
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -218,3 +220,17 @@ class UserLogoutTestCase(APITestCase):
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(response.data["detail"], "Erro ao realizar logout.")
+
+############################# Testing the DatabaseConnection #############################
+class DatabaseConnectionTestCase(APITestCase):
+    def test_database_connection():
+        """
+            Test the database connection.
+        """
+        
+        try:
+            with connection.cursor() as cursor:
+                cursor.execute("SELECT 1;")
+                print("Conexão com o banco de dados bem-sucedida!")
+        except Exception as e:
+            print(f"Erro na conexão com o banco de dados: {e}")
