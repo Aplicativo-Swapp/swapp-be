@@ -2,6 +2,7 @@ from django.urls import reverse
 from django.contrib.auth import get_user_model
 
 from django.db import connection
+from django.test import TestCase
 
 from rest_framework import status
 from rest_framework.test import APITestCase
@@ -222,15 +223,19 @@ class UserLogoutTestCase(APITestCase):
         self.assertEqual(response.data["detail"], "Erro ao realizar logout.")
 
 ############################# Testing the DatabaseConnection #############################
-class DatabaseConnectionTestCase(APITestCase):
-    def test_database_connection():
+class DatabaseConnectionTestCase(TestCase):
+    """
+        Test case to validate the database connection.
+    """
+
+    def test_database_connection(self):
         """
-            Test the database connection.
+            Test if the database connection is successful.
         """
-        
+
         try:
             with connection.cursor() as cursor:
                 cursor.execute("SELECT 1;")
-                print("Conexão com o banco de dados bem-sucedida!")
+            print("Conexão com o banco de dados bem-sucedida!")
         except Exception as e:
-            print(f"Erro na conexão com o banco de dados: {e}")
+            self.fail(f"Erro na conexão com o banco de dados: {e}")
