@@ -1,11 +1,14 @@
 from django.urls import reverse
+from django.contrib.auth import get_user_model
+
 from rest_framework import status
 from rest_framework.test import APITestCase
+from rest_framework_simplejwt.tokens import RefreshToken
+
 from .models import User
 import datetime
 
-
-# Testing the UserRegistrationView
+#### Testing the UserRegistrationView
 class UserRegistrationTestCase(APITestCase):
     def setUp(self):
         self.url = reverse('register') # Get the URL of the user-register endpoint
@@ -56,3 +59,102 @@ class UserRegistrationTestCase(APITestCase):
 
         # Check that the response status code is 400 (BAD REQUEST)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+#### Testing the UserLoginView
+User = get_user_model()
+
+class UserLoginTestCase(APITestCase):
+    def setUp(self):
+        """
+            Setup is called before each test. Creates a user to test the login.
+        """
+
+        self.user = User.objects.create_user(
+            first_name="Jhon",
+            last_name="Doe",
+            email="jhondoe@example.com",
+            cpf="12345678901",
+            password="securepassword"
+        )
+
+        self.login_url = "/api/users/login/"
+
+    def test_login_successful(self):
+        """
+            Test if the login with correct email and password returns the expected tokens.
+        """
+
+        data = {
+            "email": "jhondoe@example.com",
+            "password": "securepassword"
+        }
+
+        response = self.client.post(self.login_url, data)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn("access", response.data)
+        self.assertIn("refresh", response.data)
+
+    def test_login_invalid_password(self):
+        """
+            Test if the login fails with an incorrect password.
+        """
+        
+        data = {
+            "email": "jhondoe@example.com",
+            "password": "wrongpassword"
+        }
+
+        response = self.client.post(self.login_url, data)
+
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+        self.assertIn("detail", response.data)
+        self.assertEqual(response.data["detail"], "Email ou Senha Inválidos")
+
+    def test_login_invalid_email(self):
+        """
+            Test if the login fails with an incorrect email.
+        """
+
+        data = {
+            "email": "notexist@example.com",
+            "password": "securepassword"
+        }
+
+        response = self.client.post(self.login_url, data)
+
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+        self.assertIn("detail", response.data)
+        self.assertEqual(response.data["detail"], "Email ou Senha Inválidos")
+
+    def test_login_missing_fields(self):
+        """ 
+            Test if the login fails when some required field is missing.
+        """
+
+        response = self.client.post(self.login_url, {})
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+        self.assertIn("detail", response.data)
+        self.assertEqual(response.data["detail"], "Email e Senha são Obrigatórios")
+
+    def test_login_token_generation(self):
+        """
+            Test if the generated tokens are valid.
+        """
+
+        data = {
+            "email": "jhondoe@example.com",
+            "password": "securepassword"
+        }
+
+        response = self.client.post(self.login_url, data)
+        refresh_token = response.data.get("refresh")
+        access_token = response.data.get("access")
+
+        # Validate the generated tokens
+        self.assertIsNotNone(refresh_token)
+        self.assertIsNotNone(access_token)
+
+        # Decode the token to check if it is valid
+        token = RefreshToken(refresh_token)
+        self.assertEqual(token["user_id"], self.user.id)
