@@ -222,20 +222,34 @@ class UserLogoutTestCase(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(response.data["detail"], "Erro ao realizar logout.")
 
-############################# Testing the DatabaseConnection #############################
-class DatabaseConnectionTestCase(TestCase):
-    """
-        Test case to validate the database connection.
-    """
+# ############################# Testing the DatabaseConnection #############################
 
-    def test_database_connection(self):
-        """
-            Test if the database connection is successful.
-        """
+# """
+#     Test case to validate the database connection.
+    
+#     Run the test just to test the connection by changing settings.py
 
-        try:
-            with connection.cursor() as cursor:
-                cursor.execute("SELECT 1;")
-            print("Conexão com o banco de dados bem-sucedida!")
-        except Exception as e:
-            self.fail(f"Erro na conexão com o banco de dados: {e}")
+#     The database is configured only for the application, and not for testing, 
+#     in this case the local database is used.
+
+#     THAT'S WHY THIS TEST IS COMMENTED
+
+# """
+
+# class DatabaseConnectionTestCase(TestCase):
+#     """
+#         Test case to validate the database connection.
+#     """
+
+#     def test_database_connection(self):
+#         """
+#             Test if the database connection is successful.
+#         """
+
+#         try:
+#             with connection.cursor() as cursor:
+#                 cursor.execute("SELECT 1")
+#                 # cursor.execute("SELECT table_name FROM information_schema.tables WHERE table_schema = 'public';") # Show the tables in the database to test the connection
+#             print("Conexão com o banco de dados bem-sucedida!")
+#         except Exception as e:
+#             self.fail(f"Erro na conexão com o banco de dados: {e}")

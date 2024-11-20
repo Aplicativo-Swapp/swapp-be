@@ -52,12 +52,16 @@ class User(AbstractUser):
 
     username = None
 
-    first_name = models.CharField(max_length=30)
-    last_name = models.CharField(max_length=30)
+    id = models.AutoField(primary_key=True)
+
+    first_name = models.CharField(max_length=50)
+    last_name = models.CharField(max_length=50)
 
     cpf = models.CharField(max_length=11, unique=True)
 
     email = models.EmailField(unique=True)
+    password = models.CharField(max_length=255)
+    
     address = models.CharField(max_length=255,  blank=True, null=True)
     contact = models.CharField(max_length=15, blank=True, null=True)
 
@@ -66,6 +70,19 @@ class User(AbstractUser):
     state = models.CharField(max_length=30, blank=True, null=True)
     city = models.CharField(max_length=50, blank=True, null=True)
 
+    neighborhood = models.CharField(max_length=50, blank=True, null=True)
+    street = models.CharField(max_length=50, blank=True, null=True)
+    number = models.CharField(max_length=10, blank=True, null=True)
+    complement = models.CharField(max_length=50, blank=True, null=True)
+    zip_code = models.CharField(max_length=10, blank=True, null=True)
+
+    birth_date = models.DateField(blank=True, null=True)
+
+    id_description = models.IntegerField(blank=True, null=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
     is_active = models.BooleanField(default=True)
     is_admin = models.BooleanField(default=False)
 
@@ -73,6 +90,10 @@ class User(AbstractUser):
 
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['first_name','last_name','cpf']
+
+    class Meta:
+        db_table = "users"
+        managed = False
 
     groups = models.ManyToManyField(
         'auth.Group',
