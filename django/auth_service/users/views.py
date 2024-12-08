@@ -1,5 +1,6 @@
 from django.shortcuts import render
 from django.contrib.auth import authenticate
+from django.shortcuts import get_object_or_404
 
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -31,7 +32,7 @@ class UserRegistrationView(APIView):
             serializer.save()
             return Response({"message": "Usuário criado com sucesso!"}, status=201)
             # return Response(serializer.data, status=status.HTTP_201_CREATED)
-        # logger.error("Erro na validação: %s", serializer.errors)
+        logger.error("Erro na validação: %s", serializer.errors)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
 class UserLoginView(APIView):
@@ -96,3 +97,45 @@ class UserLogoutView(APIView):
 
         except Exception as e:
             return Response({"detail": "Erro ao realizar logout."}, status=status.HTTP_400_BAD_REQUEST)
+        
+class UserUpdateView(APIView):
+    """
+        Class to handle user update.
+    """
+    permission_classes = [IsAuthenticated] # Only authenticated users can update their profile
+    
+    def put(self, request, *args, **kwargs):
+        """
+            Handle PUT request to update user profile.
+        """
+        user = request.user
+        serializer = UserSerializer(user, data=request.data, partial=True)  # Allow partial updates
+        
+        if serializer.is_valid():
+            serializer.save()
+            logger.info(f"Usuário {user.email} atualizado com sucesso.")
+            return Response({"message": "Perfil atualizado com sucesso!"}, status=status.HTTP_200_OK)
+        
+        logger.error(f"Falha ao atualizar usuário {user.email}: {serializer.errors}")
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+class UserDeleteView(APIView):
+    """
+        Class to handle user account deletion.
+    """
+    permission_classes = [IsAuthenticated]  # Require authentication
+
+    def delete(self, request, *args, **kwargs):
+        """
+            Handle DELETE request to delete user account.
+        """
+        user = request.user
+        user_email = user.email
+
+        try:
+            user.delete()
+            logger.info(f"User {user_email} deleted successfully.")
+            return Response({"message": "Usuário deletado com sucesso!"}, status=status.HTTP_204_NO_CONTENT)
+        except Exception as e:
+            logger.error(f"Error deleting user {user_email}: {e}")
+            return Response({"error": "Erro ao deletar o usuário."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

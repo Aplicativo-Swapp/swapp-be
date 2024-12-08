@@ -5,7 +5,7 @@ from django.db import connection
 from django.test import TestCase
 
 from rest_framework import status
-from rest_framework.test import APITestCase
+from rest_framework.test import APITestCase, APIClient
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from .models import User
@@ -191,6 +191,7 @@ class UserLogoutTestCase(APITestCase):
         """
             Test the sucessful logout invalidating the refresh token.
         """
+
         data = {"refresh": self.refresh_token}
         self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {self.access_token}") # Set the access token in the header
         response = self.client.post(self.logout_url, data) # Send the request with the refresh token
@@ -221,6 +222,152 @@ class UserLogoutTestCase(APITestCase):
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(response.data["detail"], "Erro ao realizar logout.")
+
+############################# Testing the UserUpdateView #############################
+User = get_user_model()
+
+class UserProfileEditTests(TestCase):
+    """
+        Test suite for editing user profile functionality.
+    """
+    def setUp(self):
+        """           
+            Setup is called before each test. Creates a user to test the update.
+        """
+
+        self.url = reverse('user-update') # Get the URL of the user-update endpoint
+
+        # Create a test user
+        self.user = User.objects.create_user(
+            first_name="Jhon",
+            last_name="Doe",
+            email="jhondoe@example.com",
+            cpf="12345678901",
+            password="securepassword"
+        )
+
+        # Initialize APIClient and authenticate the user
+        self.client = APIClient()
+        self.client.force_authenticate(user=self.user)
+
+    def test_update_user_profile(self):
+        """
+            Test successful updating the user profile.
+        """
+
+        update_data = {
+            "first_name": "Updated",
+            "last_name": "Name",
+            "address": "New Address, 456"
+        }
+
+        # Send a PUT request to edit the user profile
+        response = self.client.put(self.url, update_data, format='json')
+
+        # Assert the response is 200 OK and the message is correct
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["message"], "Perfil atualizado com sucesso!")
+
+        # Refresh user data from the database
+        self.user.refresh_from_db()
+
+        # Verify the updated fields
+        self.assertEqual(self.user.first_name, "Updated")
+        self.assertEqual(self.user.last_name, "Name")
+        self.assertEqual(self.user.address, "New Address, 456")
+
+    def test_update_user_invalid_data(self):
+        """
+            Test updating the user profile with invalid data.
+        """
+
+        update_data = {"email": "invalidemail"}  # Invalid Email format
+
+        # Send a PUT request with invalid data
+        response = self.client.put(self.url, update_data, format='json')
+
+        # Assert the response is 400 BAD REQUEST
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+        # Verify that the user data has not been updated
+        self.assertIn("email", response.data)
+
+# ############################# Testing the UserDeleteView #############################
+User = get_user_model()
+
+class UserDeleteTestCase(APITestCase):
+    def setUp(self):
+        """
+            Setup is called before each test. Creates a user to test the delete.
+        """
+
+        self.user = User.objects.create_user(
+            first_name="Jhon",
+            last_name="Doe",
+            email="jhondoe@example.com",
+            cpf="12345678901",
+            password="securepassword"
+        )
+
+        self.login_url = reverse('login')
+        self.delete_url = reverse('user-delete')
+
+    def test_delete_user(self):
+        """
+            Test the successful deletion of a user account.
+        """
+
+        data = {
+            "email": "jhondoe@example.com",
+            "password": "securepassword"
+        }
+
+        # Login the user
+        response = self.client.post(self.login_url, data)
+
+        # Check if the login was successful
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn("access", response.data)
+        self.assertIn("refresh", response.data)
+
+        # Set the access token in the header
+        self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {response.data['access']}")
+
+        # Delete the user account with the access token
+        response = self.client.delete(self.delete_url)
+
+        # Assert the response is 204 NO CONTENT and the message is correct
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertEqual(response.data["message"], "Usuário deletado com sucesso!")
+
+        # Check if the user account was deleted from the database
+        self.assertFalse(User.objects.filter(email="jhondoe@example.com").exists())
+
+    def test_delete_user_unauthenticated(self):
+        """
+            Test the deletion of a user account with an unauthenticated user.
+        """
+
+        data = {
+            "email": "notexist@example.com",
+            "password": "securepassword"
+        }
+
+        # Login the user with invalid email
+        response = self.client.post(self.login_url, data)   
+
+        # Check if the login was failed
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+        self.assertIn("detail", response.data)
+
+        # Assert the response is 401 UNAUTHORIZED and the message is correct
+        self.assertEqual(response.data["detail"], "Email ou Senha Inválidos")
+
+        # Delete the user account with the access token
+        response = self.client.delete(self.delete_url)
+
+        # Assert the response is 4001 UNAUTHORIZED
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
 # ############################# Testing the DatabaseConnection #############################
 
