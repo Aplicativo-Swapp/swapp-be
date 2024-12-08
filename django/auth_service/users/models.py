@@ -1,5 +1,10 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser, AbstractBaseUser, BaseUserManager
+from django.core.validators import FileExtensionValidator
+
+from django.conf import settings
+import base64
+import os
 
 class UserManager(BaseUserManager):
     """
@@ -86,6 +91,17 @@ class User(AbstractUser):
     is_active = models.BooleanField(default=True)
     is_admin = models.BooleanField(default=False)
 
+    if settings.DATABASES['default']['ENGINE'] == 'django.db.backends.sqlite3':
+        profile_picture = models.BinaryField(blank=True, null=True)  # Salva como binário no SQLite
+    else:
+        profile_picture = models.ImageField(
+            upload_to='profile_pictures/',
+            blank=True,
+            null=True,
+            validators=[FileExtensionValidator(['jpg', 'jpeg', 'png'])],
+            help_text="Upload de imagem de perfil (formatos permitidos: jpg, jpeg, png)."
+        )
+
     objects = UserManager()
 
     USERNAME_FIELD = 'email'
@@ -121,3 +137,14 @@ class User(AbstractUser):
     @property
     def is_staff(self):
         return self.is_admin
+    
+    def save_profile_picture(self, image):
+        """
+            Save an image to the database in base64 (SQLite for tests).
+        """
+
+        if isinstance(self.profile_picture, models.BinaryField):
+            with open(image, "rb") as img_file:
+                self.profile_picture = base64.b64encode(img_file.read())
+        else:
+            self.profile_picture = image

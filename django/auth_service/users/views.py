@@ -1,6 +1,7 @@
 from django.shortcuts import render
 from django.contrib.auth import authenticate
 from django.shortcuts import get_object_or_404
+from django.core.mail import send_mail
 
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -113,6 +114,15 @@ class UserUpdateView(APIView):
         
         if serializer.is_valid():
             serializer.save()
+
+            send_mail(
+                subject="Perfil Atualizado",
+                message=f"Olá {user.first_name}, seu perfil foi atualizado com sucesso!",
+                from_email="no-reply@swapp.com",
+                recipient_list=[user.email],
+                fail_silently=False,
+            )
+
             logger.info(f"Usuário {user.email} atualizado com sucesso.")
             return Response({"message": "Perfil atualizado com sucesso!"}, status=status.HTTP_200_OK)
         
