@@ -2,7 +2,10 @@ from django.urls import reverse
 from django.contrib.auth import get_user_model
 
 from django.db import connection
+from django.conf import settings
 from django.test import TestCase
+
+from django.core.files.uploadedfile import SimpleUploadedFile
 
 from rest_framework import status
 from rest_framework.test import APITestCase, APIClient
@@ -10,6 +13,8 @@ from rest_framework_simplejwt.tokens import RefreshToken
 
 from .models import User
 import datetime
+import os
+import base64
 
 ############################# Testing the UserRegistrationView #############################
 class UserRegistrationTestCase(APITestCase):
@@ -368,6 +373,69 @@ class UserDeleteTestCase(APITestCase):
 
         # Assert the response is 4001 UNAUTHORIZED
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+# ############################# Testing the ProfilePictureUploadView #################################
+
+# class UserProfilePictureTestCase(APITestCase):
+#     def setUp(self):
+#         """
+#         Create a user with a profile picture for testing.
+#         """
+#         self.user = User.objects.create_user(
+#             username="testuser",
+#             email="testuser@example.com",
+#             password="password123"
+#         )
+
+#     def test_profile_picture_upload_to_file_system(self):
+#         """
+#         Test uploading an image in a production-like environment (PostgreSQL).
+#         """
+#         # Simulate an image file upload
+#         image = SimpleUploadedFile(
+#             name='test_image.jpg',
+#             content=b"dummy_image_data",
+#             content_type='image/jpeg'
+#         )
+
+#         self.user.profile_picture = image
+#         self.user.save()
+
+#         # Check if the image path is correctly stored in the model
+#         self.assertTrue(self.user.profile_picture.name.startswith('profile_pictures/'))
+
+#         # Verify the file exists in the MEDIA_ROOT
+#         image_path = os.path.join(settings.MEDIA_ROOT, self.user.profile_picture.name)
+#         self.assertTrue(os.path.exists(image_path))
+
+#     def test_profile_picture_upload_to_database(self):
+#         """
+#         Test uploading an image in a test environment (SQLite).
+#         """
+#         # Override settings to simulate SQLite (or ensure it's being used)
+#         with self.settings(DATABASES={
+#             'default': {
+#                 'ENGINE': 'django.db.backends.sqlite3',
+#                 'NAME': os.path.join(settings.BASE_DIR, 'db.sqlite3'),
+#             }
+#         }):
+#             # Simulate a binary image upload
+#             with open('path/to/test_image.jpg', 'rb') as img_file:
+#                 self.user.profile_picture = base64.b64encode(img_file.read())
+#                 self.user.save()
+
+#             # Decode the binary field and check its contents
+#             decoded_image = base64.b64decode(self.user.profile_picture)
+#             self.assertTrue(decoded_image.startswith(b"\xff\xd8"))  # Check if it's a JPEG file
+
+#     def tearDown(self):
+#         """
+#         Clean up test files created during the test.
+#         """
+#         if self.user.profile_picture and not isinstance(self.user.profile_picture, bytes):
+#             image_path = os.path.join(settings.MEDIA_ROOT, self.user.profile_picture.name)
+#             if os.path.exists(image_path):
+#                 os.remove(image_path)
 
 # ############################# Testing the DatabaseConnection #############################
 
