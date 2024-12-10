@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 from .models import User
+from django.core.files.uploadedfile import InMemoryUploadedFile
 
 class UserSerializer(serializers.ModelSerializer):
     """
@@ -9,6 +10,12 @@ class UserSerializer(serializers.ModelSerializer):
     """
     
     password = serializers.CharField(write_only=True)
+
+    profile_picture = serializers.ImageField(
+        required=False,
+        write_only=True,
+        help_text="Upload de imagem para o perfil do usuário."
+    )
 
     class Meta:
         """
@@ -19,7 +26,7 @@ class UserSerializer(serializers.ModelSerializer):
         fields = [
             'first_name', 'last_name', 'email', 'password',
             'cpf', 'address', 'contact', 'gender', 'state', 'city',
-            # 'profile_picture'
+            'profile_picture'
         ]
         extra_kwargs = {
             'password': {'write_only': True}
@@ -39,3 +46,24 @@ class UserSerializer(serializers.ModelSerializer):
         user.save()
 
         return user
+    
+    def update(self, instance, validated_data):
+        """
+            Update and return an existing user instance, given the validated data.
+        """
+
+        # Handle the profile picture field specifically
+        profile_picture = validated_data.pop("profile_picture", None)
+        
+        if profile_picture:
+            # Convert InMemoryUploadedFile to bytes
+            if isinstance(profile_picture, InMemoryUploadedFile):
+                profile_picture.seek(0)  # Ensure the file pointer is at the beginning
+                validated_data["profile_picture"] = profile_picture.read()
+        
+        # Update other fields
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        
+        instance.save()
+        return instance

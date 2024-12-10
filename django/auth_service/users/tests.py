@@ -12,6 +12,9 @@ from rest_framework.test import APITestCase, APIClient
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from .models import User
+from io import BytesIO
+from PIL import Image
+
 import datetime
 import os
 import base64
@@ -374,68 +377,75 @@ class UserDeleteTestCase(APITestCase):
         # Assert the response is 4001 UNAUTHORIZED
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
-# ############################# Testing the ProfilePictureUploadView #################################
+############################# Testing the ProfilePictureUpload #################################
+User = get_user_model()
 
-# class UserProfilePictureTestCase(APITestCase):
-#     def setUp(self):
-#         """
-#         Create a user with a profile picture for testing.
-#         """
-#         self.user = User.objects.create_user(
-#             username="testuser",
-#             email="testuser@example.com",
-#             password="password123"
-#         )
+class UserProfilePictureTestCase(APITestCase):
+    def setUp(self):
+        """
+            Setup is called before each test. Creates a user to test the profile picture.
+        """
 
-#     def test_profile_picture_upload_to_file_system(self):
-#         """
-#         Test uploading an image in a production-like environment (PostgreSQL).
-#         """
-#         # Simulate an image file upload
-#         image = SimpleUploadedFile(
-#             name='test_image.jpg',
-#             content=b"dummy_image_data",
-#             content_type='image/jpeg'
-#         )
+        self.user = User.objects.create_user(
+            first_name="Jhon",
+            last_name="Doe",
+            email="jhondoe@example.com",
+            cpf="12345678901",
+            password="securepassword"
+        )
 
-#         self.user.profile_picture = image
-#         self.user.save()
+        self.url = reverse('user-update') # Get the URL of the user-update endpoint
 
-#         # Check if the image path is correctly stored in the model
-#         self.assertTrue(self.user.profile_picture.name.startswith('profile_pictures/'))
+        # Initialize APIClient and authenticate the user
+        self.client = APIClient()
+        self.client.force_authenticate(user=self.user)
 
-#         # Verify the file exists in the MEDIA_ROOT
-#         image_path = os.path.join(settings.MEDIA_ROOT, self.user.profile_picture.name)
-#         self.assertTrue(os.path.exists(image_path))
+    @staticmethod
+    def generate_test_image():
+        """
+            Generate a small in-memory image with a valid name and extension for testing.
+        """
 
-#     def test_profile_picture_upload_to_database(self):
-#         """
-#         Test uploading an image in a test environment (SQLite).
-#         """
-#         # Override settings to simulate SQLite (or ensure it's being used)
-#         with self.settings(DATABASES={
-#             'default': {
-#                 'ENGINE': 'django.db.backends.sqlite3',
-#                 'NAME': os.path.join(settings.BASE_DIR, 'db.sqlite3'),
-#             }
-#         }):
-#             # Simulate a binary image upload
-#             with open('path/to/test_image.jpg', 'rb') as img_file:
-#                 self.user.profile_picture = base64.b64encode(img_file.read())
-#                 self.user.save()
+        image = BytesIO()
+        img = Image.new("RGB", (100, 100), color="red")
+        img.save(image, format="JPEG")
+        image.seek(0)
+        image.name = "test_image.jpg"
+        return image
+       
+    def test_upload_profile_picture(self):
+        """
+            Test successful upload of a profile picture.
+        """
 
-#             # Decode the binary field and check its contents
-#             decoded_image = base64.b64decode(self.user.profile_picture)
-#             self.assertTrue(decoded_image.startswith(b"\xff\xd8"))  # Check if it's a JPEG file
+        image = self.generate_test_image()
 
-#     def tearDown(self):
-#         """
-#         Clean up test files created during the test.
-#         """
-#         if self.user.profile_picture and not isinstance(self.user.profile_picture, bytes):
-#             image_path = os.path.join(settings.MEDIA_ROOT, self.user.profile_picture.name)
-#             if os.path.exists(image_path):
-#                 os.remove(image_path)
+        update_data = {
+            "profile_picture": image
+        }
+
+        response = self.client.put(self.url, update_data, format="multipart")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["message"], "Perfil atualizado com sucesso!")
+
+        # Verify the profile picture is stored
+        self.user.refresh_from_db()
+        self.assertIsNotNone(self.user.profile_picture)
+
+    def test_upload_invalid_profile_picture(self):
+        """
+            Test uploading an invalid file as profile picture.
+        """
+
+        invalid_file = BytesIO(b"This is not an image file")
+
+        update_data = {
+            "profile_picture": invalid_file
+        }
+
+        response = self.client.put(self.url, update_data, format="multipart")
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("profile_picture", response.data)
 
 # ############################# Testing the DatabaseConnection #############################
 

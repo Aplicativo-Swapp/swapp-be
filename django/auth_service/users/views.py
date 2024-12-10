@@ -9,6 +9,7 @@ from rest_framework import status
 from rest_framework.exceptions import AuthenticationFailed
 from rest_framework.permissions import IsAuthenticated
 from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 
 from .serializers import UserSerializer
 from .models import User
@@ -103,14 +104,24 @@ class UserUpdateView(APIView):
     """
         Class to handle user update.
     """
+
     permission_classes = [IsAuthenticated] # Only authenticated users can update their profile
+    parser_classes = [MultiPartParser, FormParser, JSONParser]  # Allow file uploads
     
     def put(self, request, *args, **kwargs):
         """
             Handle PUT request to update user profile.
         """
         user = request.user
-        serializer = UserSerializer(user, data=request.data, partial=True)  # Allow partial updates
+
+        # Handle JSON data (e.g., from tests)
+        if isinstance(request.data, dict):
+            data = request.data
+        else:
+            # Convert multipart data to dictionary
+            data = {key: request.data[key] for key in request.data}
+
+        serializer = UserSerializer(user, data=data, partial=True)  # Allow partial updates
         
         if serializer.is_valid():
             serializer.save()
@@ -133,6 +144,7 @@ class UserDeleteView(APIView):
     """
         Class to handle user account deletion.
     """
+    
     permission_classes = [IsAuthenticated]  # Require authentication
 
     def delete(self, request, *args, **kwargs):
