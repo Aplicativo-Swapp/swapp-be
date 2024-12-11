@@ -3,6 +3,8 @@ from rest_framework.exceptions import ValidationError
 from .models import User
 from django.core.files.uploadedfile import InMemoryUploadedFile
 
+from drf_spectacular.utils import extend_schema_field
+
 class UserSerializer(serializers.ModelSerializer):
     """
         Serializer to map the Model instance into JSON format. Transform the model fields into JSON. 
@@ -16,6 +18,12 @@ class UserSerializer(serializers.ModelSerializer):
         write_only=True,
         help_text="Upload de imagem para o perfil do usuário."
     )
+
+    def validate_profile_picture(self, value):
+        """
+            Validate the profile picture field.
+        """
+        return value
 
     class Meta:
         """

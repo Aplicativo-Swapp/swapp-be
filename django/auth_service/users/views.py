@@ -17,10 +17,42 @@ from .models import User
 import logging
 logger = logging.getLogger(__name__)
 
+from drf_spectacular.utils import extend_schema, OpenApiExample, OpenApiParameter
+from drf_spectacular.types import OpenApiTypes
+
 class UserRegistrationView(APIView):
     """
         Class to handle user registration.
     """
+
+    @extend_schema(
+        summary="Register a new user",
+        description="Endpoint to register a new user by providing necessary details like email, password, and personal information.",
+        request=UserSerializer,
+        responses={
+            201: OpenApiTypes.OBJECT,
+            400: OpenApiTypes.OBJECT
+        },
+        examples=[
+            OpenApiExample(
+                "Successful Registration",
+                description="Example of a successful user registration.",
+                value={
+                    "message": "Usuário criado com sucesso!"
+                },
+                response_only=True,
+            ),
+            OpenApiExample(
+                "Validation Error",
+                description="Example of validation error when invalid data is provided.",
+                value={
+                    "email": ["Este campo é obrigatório."],
+                    "password": ["Este campo é obrigatório."]
+                },
+                response_only=True,
+            )
+        ]
+    )
     
     def post(self, request, *args, **kwargs):
         """
@@ -41,6 +73,27 @@ class UserLoginView(APIView):
     """
         Class to handle user login.
     """
+
+    @extend_schema(
+        summary="User Login",
+        description="Authenticate a user by email and password and return JWT tokens.",
+        request=OpenApiTypes.OBJECT,
+        parameters=[
+            OpenApiParameter("email", OpenApiTypes.EMAIL, description="The email of the user."),
+            OpenApiParameter("password", OpenApiTypes.STR, description="The password of the user."),
+        ],
+        responses={
+            200: OpenApiExample(
+                "Login bem-sucedido",
+                value={
+                    "refresh": "jwt-refresh-token",
+                    "access": "jwt-access-token",
+                    "message": "Login efetuado com sucesso!",
+                },
+            ),
+            401: "Credenciais inválidas.",
+        },
+    )
     
     def post(self, request):
         """
@@ -78,6 +131,37 @@ class UserLogoutView(APIView):
     
     permission_classes = [IsAuthenticated] # Only authenticated users can logout
 
+    @extend_schema(
+        summary="User Logout",
+        description="Logout a user by providing their refresh token.",
+        request=OpenApiTypes.OBJECT,
+        parameters=[
+            OpenApiParameter("refresh", OpenApiTypes.STR, description="The refresh token of the user."),
+        ],
+        responses={
+            200: OpenApiTypes.OBJECT,
+            400: OpenApiTypes.OBJECT
+        },
+        examples=[
+            OpenApiExample(
+                "Successful Logout",
+                description="Example of a successful user logout.",
+                value={
+                    "detail": "Logout realizado com sucesso."
+                },
+                response_only=True,
+            ),
+            OpenApiExample(
+                "Invalid Refresh Token",
+                description="Example of an invalid refresh token.",
+                value={
+                    "detail": "Erro ao realizar logout."
+                },
+                response_only=True,
+            )
+        ]
+    )
+
     def post(self, request, *args, **kwargs):
         """
             Method to handle POST request for user logout.
@@ -108,6 +192,37 @@ class UserUpdateView(APIView):
     permission_classes = [IsAuthenticated] # Only authenticated users can update their profile
     parser_classes = [MultiPartParser, FormParser, JSONParser]  # Allow file uploads
     
+    @extend_schema(
+        summary="Update user profile",
+        description="Endpoint to update user details, including profile picture.",
+        request=UserSerializer,
+        responses={
+            200: OpenApiExample(
+                "Success Response",
+                value={"message": "Perfil atualizado com sucesso!"},
+                status_codes=["200"],
+            ),
+            400: OpenApiExample(
+                "Validation Error",
+                value={"email": ["Este email já está em uso."]},
+                status_codes=["400"],
+            ),
+        },
+        examples=[
+            OpenApiExample(
+                "Exemplo de Requisição",
+                value={
+                    "first_name": "John",
+                    "last_name": "Doe",
+                    "email": "john.doe@example.com",
+                    "address": "Rua Nova, 123",
+                    "profile_picture": "(arquivo de imagem)"
+                },
+                request_only=True,
+            ),
+        ],
+    )
+
     def put(self, request, *args, **kwargs):
         """
             Handle PUT request to update user profile.
@@ -146,6 +261,15 @@ class UserDeleteView(APIView):
     """
     
     permission_classes = [IsAuthenticated]  # Require authentication
+
+    @extend_schema(
+        summary="Delete user account",
+        description="Endpoint to delete user account.",
+        responses={
+            204: OpenApiTypes.OBJECT,
+            500: OpenApiTypes.OBJECT
+        },
+    )
 
     def delete(self, request, *args, **kwargs):
         """
