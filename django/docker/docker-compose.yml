@@ -1,6 +1,49 @@
 version: '3.8'
 
 services:
+  # Kong Database
+  kong-database:
+    image: postgres:13
+    container_name: kong-database
+    environment:
+      POSTGRES_USER: kong
+      POSTGRES_DB: kong
+      POSTGRES_PASSWORD: kong
+    networks:
+      - app_network
+    volumes:
+      - kong_data:/var/lib/postgresql/data
+
+  # # Kong API Gateway
+  kong:
+    image: kong:3.4.0
+    ulimits:
+      nofile:
+        soft: 4096
+        hard: 4096
+    container_name: kong
+    # restart: always
+    environment:
+      KONG_DATABASE: postgres
+      KONG_PG_HOST: kong-database
+      KONG_PG_USER: kong
+      KONG_PG_PASSWORD: kong
+      KONG_CASSANDRA_CONTACT_POINTS: none
+      KONG_PROXY_ACCESS_LOG: /dev/stdout
+      KONG_ADMIN_ACCESS_LOG: /dev/stdout
+      KONG_PROXY_ERROR_LOG: /dev/stderr
+      KONG_ADMIN_ERROR_LOG: /dev/stderr
+      KONG_ADMIN_LISTEN: 0.0.0.0:8006
+      KONG_PROXY_LISTEN: 0.0.0.0:8005
+    ports:
+      - "8005:8005" # Public API requests
+      - "8006:8006" # Admin API
+      - "8443:8443" # Public API requests (HTTPS)
+      - "8444:8444" # Admin API (HTTPS)
+    networks:
+      - app_network
+    depends_on:
+      - kong-database
   auth_service:
     build:
       context: ../auth_service
@@ -107,6 +150,14 @@ services:
     networks:
       - app_network
 
+networks:
+  app_network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  kong_data:
+
   # db:
   #   image: postgres:13
   #   container_name: postgres_db
@@ -116,11 +167,3 @@ services:
   #     - "5432:5432"
   #   volumes:
   #     - postgres_data:/var/lib/postgresql/data
-
-networks:
-  app_network:
-    driver: bridge
-
-volumes:
-  postgres_data:
-
