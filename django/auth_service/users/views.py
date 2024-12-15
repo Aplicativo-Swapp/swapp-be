@@ -236,10 +236,10 @@ class UserUpdateView(APIView):
             # Convert multipart data to dictionary
             data = {key: request.data[key] for key in request.data}
 
-        serializer = UserSerializer(user, data=data, partial=True)  # Allow partial updates
-        
         logger.info(f"Dados recebidos para atualização do perfil: {data}")
 
+        serializer = UserSerializer(user, data=data, partial=True)  # Allow partial updates
+        
         if serializer.is_valid():
             serializer.save()
 
