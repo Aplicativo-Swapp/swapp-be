@@ -95,7 +95,7 @@ class User(AbstractUser):
         profile_picture = models.BinaryField(blank=True, null=True)  # Save image as binary data in SQLite
     else:
         profile_picture = models.ImageField(
-            db_column='foto perfil',
+            # db_column='foto perfil',
             blank=True,
             null=True,
             validators=[FileExtensionValidator(['jpg', 'jpeg', 'png'])],
@@ -109,7 +109,7 @@ class User(AbstractUser):
 
     class Meta:
         db_table = "users"
-        managed = False
+        managed = True
 
     groups = models.ManyToManyField(
         'auth.Group',

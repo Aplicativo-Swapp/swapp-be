@@ -238,16 +238,18 @@ class UserUpdateView(APIView):
 
         serializer = UserSerializer(user, data=data, partial=True)  # Allow partial updates
         
+        logger.info(f"Dados recebidos para atualização do perfil: {data}")
+
         if serializer.is_valid():
             serializer.save()
 
-            send_mail(
-                subject="Perfil Atualizado",
-                message=f"Olá {user.first_name}, seu perfil foi atualizado com sucesso!",
-                from_email="no-reply@swapp.com",
-                recipient_list=[user.email],
-                fail_silently=False,
-            )
+            # send_mail(
+            #     subject="Perfil Atualizado",
+            #     message=f"Olá {user.first_name}, seu perfil foi atualizado com sucesso!",
+            #     from_email="no-reply@swapp.com",
+            #     recipient_list=[user.email],
+            #     fail_silently=False,
+            # )
 
             logger.info(f"Usuário {user.email} atualizado com sucesso.")
             return Response({"message": "Perfil atualizado com sucesso!"}, status=status.HTTP_200_OK)
@@ -285,3 +287,31 @@ class UserDeleteView(APIView):
         except Exception as e:
             logger.error(f"Error deleting user {user_email}: {e}")
             return Response({"error": "Erro ao deletar o usuário."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        
+class UserDetailView(APIView):
+    """
+        Class to retrieve user details for editing the profile.
+    """
+
+    permission_classes = [IsAuthenticated]  # Require authentication
+
+    @extend_schema(
+        summary="Retrieve user details",
+        description="Endpoint to fetch user details to edit the profile.",
+        responses={
+            200: UserSerializer,
+            401: OpenApiExample(
+                "Unauthorized Access",
+                value={"detail": "As credenciais de autenticação não foram fornecidas."},
+                response_only=True,
+            ),
+        },
+    )
+
+    def get(self, request, *args, **kwargs):
+        """
+            Handle GET request to retrieve user details.
+        """
+        user = request.user  # Get the authenticated user
+        serializer = UserSerializer(user)  # Serialize user instance
+        return Response(serializer.data, status=status.HTTP_200_OK)
