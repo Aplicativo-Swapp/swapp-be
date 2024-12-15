@@ -2,6 +2,7 @@ from django.shortcuts import render
 from django.contrib.auth import authenticate
 from django.shortcuts import get_object_or_404
 from django.core.mail import send_mail
+from django.contrib.auth.models import update_last_login
 
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -315,3 +316,60 @@ class UserDetailView(APIView):
         user = request.user  # Get the authenticated user
         serializer = UserSerializer(user)  # Serialize user instance
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+class UserChangePasswordView(APIView):
+    """
+        Class to change user password.
+    """
+
+    permission_classes = [IsAuthenticated]  # Require authentication
+
+    @extend_schema(
+        summary="Change user password",
+        description="Endpoint to change user password.",
+        request=UserSerializer,
+        responses={
+            200: OpenApiTypes.OBJECT,
+            400: OpenApiTypes.OBJECT,
+            401: OpenApiTypes.OBJECT,
+        },
+    )
+    
+    def put(self, request, *args, **kwargs):
+        """
+            Handle PUT request to change user password.
+        """
+
+        user = request.user  # Get the authenticated user
+        data = request.data  # Get the request data
+
+        current_password = data.get("currentPassword")
+        new_password = data.get("newPassword")
+        confirm_new_password = data.get("confirmNewPassword")
+
+        if not current_password or not new_password or not confirm_new_password: # Check if all fields are provided
+            return Response(
+                {"message": "Todos os campos são obrigatórios."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        if not user.check_password(current_password): # Check if current password is correct
+            return Response(
+                {"message": "Senha atual incorreta."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        if new_password != confirm_new_password: # Check if new password and confirm new password are the same
+            return Response(
+                {"message": "As novas senhas não coincidem."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        user.set_password(new_password)  # Set the new password
+        user.save()  # Save the user
+        update_last_login(None, user)  # Update last login
+
+        return Response(
+            {"message": "Senha alterada com sucesso!"},
+            status=status.HTTP_200_OK
+        )

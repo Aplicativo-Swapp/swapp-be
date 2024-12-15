@@ -1,8 +1,10 @@
-from rest_framework import serializers
-from rest_framework.exceptions import ValidationError
-from .models import User
 from django.core.files.uploadedfile import InMemoryUploadedFile
 from django.utils import timezone
+
+from rest_framework import serializers
+from rest_framework.exceptions import ValidationError
+
+from .models import User
 
 import logging
 logger = logging.getLogger(__name__)
