@@ -91,16 +91,24 @@ class User(AbstractUser):
     is_active = models.BooleanField(default=True)
     is_admin = models.BooleanField(default=False)
 
-    if settings.DATABASES['default']['ENGINE'] == 'django.db.backends.sqlite3':
-        profile_picture = models.BinaryField(blank=True, null=True)  # Save image as binary data in SQLite
-    else:
-        profile_picture = models.ImageField(
-            # db_column='foto perfil',
-            blank=True,
-            null=True,
-            validators=[FileExtensionValidator(['jpg', 'jpeg', 'png'])],
-            help_text="Upload de imagem de perfil (formatos permitidos: jpg, jpeg, png)."
-        )
+    # if settings.DATABASES['default']['ENGINE'] == 'django.db.backends.sqlite3':
+    #     profile_picture = models.BinaryField(blank=True, null=True)  # Save image as binary data in SQLite
+    # else:
+    #     profile_picture = models.ImageField(
+    #         # db_column='foto perfil',
+    #         blank=True,
+    #         null=True,
+    #         validators=[FileExtensionValidator(['jpg', 'jpeg', 'png'])],
+    #         help_text="Upload de imagem de perfil (formatos permitidos: jpg, jpeg, png)."
+    #     )
+
+    profile_picture = models.BinaryField(
+        # db_column='foto perfil',
+        blank=True,
+        null=True,
+        validators=[FileExtensionValidator(['jpg', 'jpeg', 'png'])],
+        help_text="Upload de imagem de perfil (formatos permitidos: jpg, jpeg, png)."
+    )
 
     objects = UserManager()
 
