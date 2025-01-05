@@ -47,6 +47,7 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt.token_blacklist',
     "drf_spectacular",
     "drf_spectacular_sidecar", 
+    'django_celery_results',
 ]
 
 MIDDLEWARE = [
@@ -69,7 +70,7 @@ ROOT_URLCONF = 'home_service.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [os.path.join(BASE_DIR, 'templates')],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -191,12 +192,19 @@ DEFAULT_FILE_STORAGE = 'django.core.files.storage.FileSystemStorage'
 
 # Email settings
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = config('EMAIL_HOST') # SMTP Server
-EMAIL_PORT = config('EMAIL_PORT')  # SMTP Port
-EMAIL_USE_TLS = config('EMAIL_USE_TLS')  # TLS Protocol
-EMAIL_HOST_USER = config('EMAIL_HOST_USER')
-EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD')
+EMAIL_HOST = os.getenv('EMAIL_HOST') # SMTP Server
+EMAIL_PORT = os.getenv('EMAIL_PORT')  # SMTP Port
+EMAIL_USE_TLS = os.getenv('EMAIL_USE_TLS')  # TLS Protocol
+EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER')
+EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')
 DEFAULT_FROM_EMAIL = 'SwApp <no-reply@swapp.com>' # Default email address
+
+# Redis/Celery settings
+CELERY_BROKER_URL = os.getenv('REDIS_URL')  # Redis URL
+CELERY_RESULT_BACKEND = os.getenv('REDIS_URL')
+CELERY_ACCEPT_CONTENT = ['application/json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
 
 # # Logging
 # LOGGING = {
