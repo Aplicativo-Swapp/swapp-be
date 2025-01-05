@@ -44,6 +44,16 @@ services:
       - app_network
     depends_on:
       - kong-database
+
+  # Redis Service
+  redis:
+    image: redis:7
+    container_name: redis
+    ports:
+      - "6379:6379"
+    networks:
+      - app_network
+
   auth_service:
     build:
       context: ../auth_service
@@ -58,6 +68,7 @@ services:
       - "8000:8000"
     environment:
       - PYTHONUNBUFFERED=1
+      - CELERY_BROKER_URL=redis://redis:6379/0 # Celery Broker URL
     stdin_open: true
     tty: true
     networks:
@@ -80,6 +91,7 @@ services:
       # - "8001:8000"
     environment:
       - PYTHONUNBUFFERED=1
+      - CELERY_BROKER_URL=redis://redis:6379/0 # Celery Broker URL
     stdin_open: true
     tty: true
     networks:
@@ -102,6 +114,7 @@ services:
       # - "8002:8000"
     environment:
       - PYTHONUNBUFFERED=1
+      - CELERY_BROKER_URL=redis://redis:6379/0 # Celery Broker URL
     stdin_open: true
     tty: true
     networks:
@@ -124,6 +137,7 @@ services:
       # - "8003:8000"
     environment:
       - PYTHONUNBUFFERED=1
+      - CELERY_BROKER_URL=redis://redis:6379/0 # Celery Broker URL
     stdin_open: true
     tty: true
     networks:
