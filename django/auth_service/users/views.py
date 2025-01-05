@@ -4,6 +4,8 @@ from django.shortcuts import get_object_or_404
 from django.core.mail import send_mail
 from django.contrib.auth.models import update_last_login
 
+from users.tasks import send_user_update_email
+
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
@@ -245,17 +247,19 @@ class UserUpdateView(APIView):
             serializer.save()
             
             # Send email notification to the user
-            try:
-                send_mail(
-                    subject="Perfil Atualizado",
-                    message=f"Olá {user.first_name},\n\nSeu perfil foi atualizado com sucesso!\n\nEquipe SwApp",
-                    from_email="no-reply@swapp.com",
-                    recipient_list=[user.email],
-                    fail_silently=False,
-                )
-                logger.info(f"Notificação de atualização enviada para {user.email}.")
-            except Exception as e:
-                logger.error(f"Erro ao enviar e-mail para {user.email}: {e}")
+            send_user_update_email.delay(user.first_name, user.email)
+
+            # try:
+            #     send_mail(
+            #         subject="Perfil Atualizado",
+            #         message=f"Olá {user.first_name},\n\nSeu perfil foi atualizado com sucesso!\n\nEquipe SwApp",
+            #         from_email="no-reply@swapp.com",
+            #         recipient_list=[user.email],
+            #         fail_silently=False,
+            #     )
+            #     logger.info(f"Notificação de atualização enviada para {user.email}.")
+            # except Exception as e:
+            #     logger.error(f"Erro ao enviar e-mail para {user.email}: {e}")
 
             logger.info(f"Usuário {user.email} atualizado com sucesso.")
             return Response({"message": "Perfil atualizado com sucesso!"}, status=status.HTTP_200_OK)
