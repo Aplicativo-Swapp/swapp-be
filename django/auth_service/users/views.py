@@ -243,14 +243,19 @@ class UserUpdateView(APIView):
         
         if serializer.is_valid():
             serializer.save()
-
-            # send_mail(
-            #     subject="Perfil Atualizado",
-            #     message=f"Olá {user.first_name}, seu perfil foi atualizado com sucesso!",
-            #     from_email="no-reply@swapp.com",
-            #     recipient_list=[user.email],
-            #     fail_silently=False,
-            # )
+            
+            # Send email notification to the user
+            try:
+                send_mail(
+                    subject="Perfil Atualizado",
+                    message=f"Olá {user.first_name},\n\nSeu perfil foi atualizado com sucesso!\n\nEquipe SwApp",
+                    from_email="no-reply@swapp.com",
+                    recipient_list=[user.email],
+                    fail_silently=False,
+                )
+                logger.info(f"Notificação de atualização enviada para {user.email}.")
+            except Exception as e:
+                logger.error(f"Erro ao enviar e-mail para {user.email}: {e}")
 
             logger.info(f"Usuário {user.email} atualizado com sucesso.")
             return Response({"message": "Perfil atualizado com sucesso!"}, status=status.HTTP_200_OK)
