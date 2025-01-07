@@ -1,0 +1,5 @@
+Olá {{ first_name }},
+
+Seu perfil foi cadastrado com sucesso!
+
+Obrigado por usar o SwApp!

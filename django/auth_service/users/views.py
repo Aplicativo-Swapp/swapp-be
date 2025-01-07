@@ -4,7 +4,7 @@ from django.shortcuts import get_object_or_404
 from django.core.mail import send_mail
 from django.contrib.auth.models import update_last_login
 
-from users.tasks import send_user_update_email
+from users.tasks import send_user_update_email, send_user_delete_email, send_user_change_password_email, send_user_register_email
 
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -67,6 +67,10 @@ class UserRegistrationView(APIView):
 
         if serializer.is_valid():
             serializer.save()
+
+            # Send email notification to the user
+            send_user_register_email.delay(serializer.data['first_name'], serializer.data['email'])
+
             return Response({"message": "Usuário criado com sucesso!"}, status=201)
             # return Response(serializer.data, status=status.HTTP_201_CREATED)
         logger.error("Erro na validação: %s", serializer.errors)
@@ -292,6 +296,10 @@ class UserDeleteView(APIView):
 
         try:
             user.delete()
+
+            # Send email notification to the user
+            send_user_delete_email.delay(user.first_name, user_email)
+
             logger.info(f"User {user_email} deleted successfully.")
             return Response({"message": "Usuário deletado com sucesso!"}, status=status.HTTP_204_NO_CONTENT)
         except Exception as e:
@@ -376,6 +384,7 @@ class UserChangePasswordView(APIView):
 
         user.set_password(new_password)  # Set the new password
         user.save()  # Save the user
+        send_user_change_password_email.delay(user.first_name, user.email) # Send email notification to the user
         update_last_login(None, user)  # Update last login
 
         return Response(
