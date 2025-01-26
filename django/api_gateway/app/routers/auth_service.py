@@ -3,7 +3,7 @@ import httpx
 
 router = APIRouter(prefix="/auth_service", tags=["Auth Service"])
 
-AUTH_SERVICE_URL = "http://auth_service:8000"
+AUTH_SERVICE_URL = "http://0.0.0.0:8000/api"
 
 @router.get("/health")
 async def auth_service_health():

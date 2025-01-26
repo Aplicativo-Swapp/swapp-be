@@ -3,7 +3,7 @@ import httpx
 
 router = APIRouter(prefix="/profile_service", tags=["Profile Service"])
 
-PROFILE_SERVICE_URL = "http://profile_service:8001"
+PROFILE_SERVICE_URL = "http://0.0.0.0:8001/api"
 
 @router.get("/health")
 async def profile_service_health():

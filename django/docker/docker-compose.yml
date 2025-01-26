@@ -14,7 +14,7 @@ services:
     volumes:
       - kong_data:/var/lib/postgresql/data
 
-  # # Kong API Gateway
+  # Kong API Gateway
   kong:
     image: kong:3.4.0
     ulimits:

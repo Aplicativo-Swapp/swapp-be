@@ -56,6 +56,13 @@ class UserSerializer(serializers.ModelSerializer):
             'password': {'write_only': True}
         }
 
+    @extend_schema_field(
+        {
+            "type": "string",
+            "format": "url",
+            "example": "data:image/png;base64,iVBORw0KGgoAAAANS..."
+        }
+    )
     def get_profile_picture_url(self, obj):
         if obj.profile_picture:
             return f"data:image/png;base64,{base64.b64encode(obj.profile_picture).decode('utf-8')}"

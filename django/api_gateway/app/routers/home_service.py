@@ -3,7 +3,7 @@ import httpx
 
 router = APIRouter(prefix="/home_service", tags=["Home Service"])
 
-HOME_SERVICE_URL = "http://home_service:8003"
+HOME_SERVICE_URL = "http://0.0.0.0:8003/api"
 
 @router.get("/health")
 async def home_service_health():

@@ -3,7 +3,7 @@ import httpx
 
 router = APIRouter(prefix="/trade_service", tags=["Trade Service"])
 
-TRADE_SERVICE_URL = "http://trade_service:8002"
+TRADE_SERVICE_URL = "http://0.0.0.0:8002/api"
 
 @router.get("/health")
 async def trade_service_health():

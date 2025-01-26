@@ -32,6 +32,19 @@ class UserRegistrationView(APIView):
         summary="Register a new user",
         description="Endpoint to register a new user by providing necessary details like email, password, and personal information.",
         request=UserSerializer,
+        parameters=[
+            OpenApiParameter("first_name", OpenApiTypes.STR, description="The first name of the user."),
+            OpenApiParameter("last_name", OpenApiTypes.STR, description="The last name of the user."),
+            OpenApiParameter("email", OpenApiTypes.EMAIL, description="The email of the user."),
+            OpenApiParameter("password", OpenApiTypes.STR, description="The password of the user."),
+            OpenApiParameter("confirm_password", OpenApiTypes.STR, description="The confirm password of the user."),
+            OpenApiParameter("cpf", OpenApiTypes.STR, description="The CPF of the user."),
+            OpenApiParameter("gender", OpenApiTypes.STR, description="The gender of the user."),   
+            OpenApiParameter("contact", OpenApiTypes.STR, description="The contact of the user."),
+            OpenApiParameter("state", OpenApiTypes.STR, description="The state of the user."),
+            OpenApiParameter("city", OpenApiTypes.STR, description="The city of the user."),
+            OpenApiParameter("address", OpenApiTypes.STR, description="The address of the user."),
+        ],
         responses={
             201: OpenApiTypes.OBJECT,
             400: OpenApiTypes.OBJECT
@@ -43,6 +56,7 @@ class UserRegistrationView(APIView):
                 value={
                     "message": "Usuário criado com sucesso!"
                 },
+                status_codes=["201"],
                 response_only=True,
             ),
             OpenApiExample(
@@ -52,6 +66,7 @@ class UserRegistrationView(APIView):
                     "email": ["Este campo é obrigatório."],
                     "password": ["Este campo é obrigatório."]
                 },
+                status_codes=["400"],
                 response_only=True,
             )
         ]
@@ -85,21 +100,42 @@ class UserLoginView(APIView):
         summary="User Login",
         description="Authenticate a user by email and password and return JWT tokens.",
         request=OpenApiTypes.OBJECT,
+        # request=UserSerializer,
         parameters=[
             OpenApiParameter("email", OpenApiTypes.EMAIL, description="The email of the user."),
             OpenApiParameter("password", OpenApiTypes.STR, description="The password of the user."),
         ],
         responses={
-            200: OpenApiExample(
+            200: OpenApiTypes.OBJECT,
+            401: OpenApiTypes.OBJECT
+        },
+        examples=[
+            OpenApiExample(
+                "Login",
+                value={
+                    "email": "user@example.com",
+                    "password": "password"
+                }
+            ),
+            OpenApiExample(
                 "Login bem-sucedido",
                 value={
                     "refresh": "jwt-refresh-token",
                     "access": "jwt-access-token",
                     "message": "Login efetuado com sucesso!",
                 },
+                status_codes=["200"],
+                response_only=True
             ),
-            401: "Credenciais inválidas.",
-        },
+            OpenApiExample(
+                "Login falhou",
+                value={
+                    "detail": "Email ou Senha Inválidos",
+                },
+                status_codes=["401"],
+                response_only=True
+            ),
+        ],
     )
     
     def post(self, request):
@@ -151,12 +187,21 @@ class UserLogoutView(APIView):
         },
         examples=[
             OpenApiExample(
+                "Logout",
+                value={
+                    "refresh": "jwt-refresh-token"
+                },
+                request_only=True,
+                response_only=False
+            ),
+            OpenApiExample(
                 "Successful Logout",
                 description="Example of a successful user logout.",
                 value={
                     "detail": "Logout realizado com sucesso."
                 },
                 response_only=True,
+                status_codes=["200"]
             ),
             OpenApiExample(
                 "Invalid Refresh Token",
@@ -165,6 +210,7 @@ class UserLogoutView(APIView):
                     "detail": "Erro ao realizar logout."
                 },
                 response_only=True,
+                status_codes=["400"]
             )
         ]
     )
@@ -203,21 +249,27 @@ class UserUpdateView(APIView):
         summary="Update user profile",
         description="Endpoint to update user details, including profile picture.",
         request=UserSerializer,
+        parameters=[
+            OpenApiParameter("profile_picture", OpenApiTypes.STR, description="The profile picture of the user."),
+            OpenApiParameter("first_name", OpenApiTypes.STR, description="The first name of the user."),
+            OpenApiParameter("last_name", OpenApiTypes.STR, description="The last name of the user."),
+            OpenApiParameter("email", OpenApiTypes.EMAIL, description="The email of the user."),
+            OpenApiParameter("birth_date", OpenApiTypes.DATE, description="The birth date of the user."),
+            OpenApiParameter("gender", OpenApiTypes.STR, description="The gender of the user."),
+            OpenApiParameter("zip_code", OpenApiTypes.STR, description="The CEP of the user."),
+            OpenApiParameter("state", OpenApiTypes.STR, description="The state of the user."),
+            OpenApiParameter("city", OpenApiTypes.STR, description="The city of the user."),
+            OpenApiParameter("address", OpenApiTypes.STR, description="The address of the user."),
+            OpenApiParameter("number", OpenApiTypes.STR, description="The phone of the user."),
+            OpenApiParameter("complement", OpenApiTypes.STR, description="The complement of the user.")
+        ],
         responses={
-            200: OpenApiExample(
-                "Success Response",
-                value={"message": "Perfil atualizado com sucesso!"},
-                status_codes=["200"],
-            ),
-            400: OpenApiExample(
-                "Validation Error",
-                value={"email": ["Este email já está em uso."]},
-                status_codes=["400"],
-            ),
+            200: OpenApiTypes.OBJECT,
+            400: OpenApiTypes.OBJECT
         },
         examples=[
             OpenApiExample(
-                "Exemplo de Requisição",
+                "Update Profile",
                 value={
                     "first_name": "John",
                     "last_name": "Doe",
@@ -227,6 +279,22 @@ class UserUpdateView(APIView):
                 },
                 request_only=True,
             ),
+            OpenApiExample(
+                "Success Response",
+                value={
+                    "message": "Perfil atualizado com sucesso!"
+                },
+                status_codes=["200"],
+            ),
+            OpenApiExample(
+                "Invalid Data",
+                value={
+                    "email": ["Este email já está em uso."],
+                    "detail": "Erro ao atualizar perfil."
+                },
+                status_codes=["400"],
+                response_only=True,
+            )
         ],
     )
 
@@ -281,10 +349,39 @@ class UserDeleteView(APIView):
     @extend_schema(
         summary="Delete user account",
         description="Endpoint to delete user account.",
+        request=OpenApiTypes.OBJECT,
+        parameters=[
+            OpenApiParameter("refresh", OpenApiTypes.STR, description="The refresh token of the user."),
+        ],
         responses={
             204: OpenApiTypes.OBJECT,
             500: OpenApiTypes.OBJECT
         },
+        examples=[
+            OpenApiExample(
+                "Delete User",
+                value={
+                    "refresh": "jwt-refresh-token"
+                },
+                request_only=True
+            ),
+            OpenApiExample(
+                "Successful Deletion",
+                value={
+                    "message": "Usuário deletado com sucesso!"
+                },
+                status_codes=["204"],
+                response_only=True,
+            ),
+            OpenApiExample(
+                "Error Response",
+                value={
+                    "error": "Erro ao deletar o usuário."
+                },
+                status_codes=["500"],
+                response_only=True,
+            ),
+        ]
     )
 
     def delete(self, request, *args, **kwargs):
@@ -316,14 +413,45 @@ class UserDetailView(APIView):
     @extend_schema(
         summary="Retrieve user details",
         description="Endpoint to fetch user details to edit the profile.",
+        request=OpenApiTypes.OBJECT,
+        parameters=[
+            OpenApiParameter("refresh", OpenApiTypes.STR, description="The refresh token of the user."),
+        ],
         responses={
-            200: UserSerializer,
-            401: OpenApiExample(
-                "Unauthorized Access",
-                value={"detail": "As credenciais de autenticação não foram fornecidas."},
+            200: OpenApiTypes.OBJECT,
+            401: OpenApiTypes.OBJECT
+        },
+        examples=[
+            OpenApiExample(
+                "Successful Response",
+                value={
+                    "id": 1,    
+                    "first_name": "John",
+                    "last_name": "Doe",
+                    "email": "john.doe@example.com",
+                    "address": "Rua Nova, 123",
+                    "profile_picture": "profile_picture.jpg",
+                    "cpf": "12345678901",
+                    "phone": "1234567890",
+                    "birth_date": "1990-01-01",
+                    "gender": "M",
+                    "is_active": True,
+                    "is_admin": False,
+                    "created_at": "2022-01-01T00:00:00Z",
+                    "updated_at": "2022-01-01T00:00:00Z",
+                },
+                status_codes=["200"],
                 response_only=True,
             ),
-        },
+            OpenApiExample(
+                "Unauthorized Response",
+                value={
+                    "detail": "Usuário não autenticado.",
+                },
+                status_codes=["401"],
+                response_only=True,
+            ),
+        ]
     )
 
     def get(self, request, *args, **kwargs):
@@ -345,11 +473,71 @@ class UserChangePasswordView(APIView):
         summary="Change user password",
         description="Endpoint to change user password.",
         request=UserSerializer,
+        parameters=[
+            OpenApiParameter("refresh", OpenApiTypes.STR, description="The refresh token of the user."),
+            OpenApiParameter("new_password", OpenApiTypes.STR, description="The new password of the user."),
+            OpenApiParameter("confirm_new_password", OpenApiTypes.STR, description="The confirm new password of the user."),
+            OpenApiParameter("current_password", OpenApiTypes.STR, description="The current password of the user."),
+        ],
         responses={
             200: OpenApiTypes.OBJECT,
             400: OpenApiTypes.OBJECT,
             401: OpenApiTypes.OBJECT,
         },
+        examples=[
+            OpenApiExample(
+                "Successful Password Change",
+                value={
+                    "message": "Senha alterada com sucesso!",
+                    "user": {
+                        "first_name": "John",
+                        "last_name": "Doe",
+                        "email": "john.doe@example.com",
+                        "address": "Rua Nova, 123",
+                        "phone": "1234567890",
+                        "birth_date": "1990-01-01",
+                        "gender": "M",
+                        "is_active": True,
+                        "is_admin": False,
+                        "created_at": "2022-01-01T00:00:00Z",
+                        "updated_at": "2022-01-01T00:00:00Z",
+                    },
+                    "currentPassword": "old_password",
+                    "newPassword": "new_password",
+                    "confirmNewPassword": "new_password"
+                },
+                request_only=True,
+            ),
+            OpenApiExample(
+                "Successful Response",
+                value={
+                    "message": "Senha alterada com sucesso!"
+                },
+                status_codes=["200"],
+                response_only=True,
+            ),
+            OpenApiExample(
+                "Error Response",
+                value={
+                    "message": "Todos os campos são obrigatórios.",
+                    "errors": {
+                        "currentPassword": ["Senha atual incorreta."],
+                        "newPassword": ["Nova senha deve ser diferente da senha atual.",],
+                        "confirmNewPassword": ["As novas senhas não coincidem." ]
+                    },
+                },
+                status_codes=["400"],
+                response_only=True,
+            ),
+            OpenApiExample(
+                "Unauthorized Response",
+                value={
+                    "detail": "Usuário não autenticado.",
+                },
+                status_codes=["401"],
+                response_only=True,
+            ),
+        ]
     )
     
     def put(self, request, *args, **kwargs):
