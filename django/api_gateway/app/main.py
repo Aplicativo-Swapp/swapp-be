@@ -2,8 +2,11 @@ from fastapi import FastAPI
 from fastapi.openapi.utils import get_openapi
 from fastapi.openapi.docs import get_swagger_ui_html, get_redoc_html
 
-from fastapi.openapi.utils import get_openapi
-import httpx, asyncio, logging
+from dotenv import load_dotenv
+
+import httpx, asyncio, logging, yaml, os
+
+load_dotenv(dotenv_path="../envs/.env_gateway")
 
 # Configuração de logs
 logging.basicConfig(level=logging.INFO)
@@ -13,10 +16,10 @@ app = FastAPI(title="SwApp API Gateway", version="1.0.0")
 
 # OpenAPI Schema URL for each microservice 
 MICROSERVICES = {
-    "auth_service": "http://0.0.0.0:8000/api/schema/",
-    "profile_service": "http://0.0.0.0:8001/api/schema/",
-    "trade_service": "http://0.0.0.0:8002/api/schema/",
-    "home_service": "http://0.0.0.0:8003/api/schema/",
+    "auth_service": "http://172.28.1.5:8000/api/schema/",
+    "profile_service": "http://172.28.1.6:8001/api/schema/",
+    "trade_service": "http://172.28.1.7:8002/api/schema/",
+    "home_service": "http://172.28.1.8:8003/api/schema/",
 }
 
 # Cache para armazenar o schema consolidado
@@ -26,15 +29,24 @@ async def fetch_service_schema(client, name, url):
     """
         Fetch OpenAPI schema from a microservice.
     """
+
     try:
-        response = await client.get(url)
+        response = await client.get(url, headers={"Accept": "application/json"})
         response.raise_for_status()
-        logger.info(f"Schema fetched from {name}")
-        return name, response.json()
+        content = response.text
+        try:
+            # Try to load the content as JSON
+            schema = response.json()
+        except ValueError:
+            # Convert from YAML to JSON, if needed
+            schema = yaml.safe_load(content)
+        logger.info(f"Schema fetched from {name} at {url}")
+        return name, schema
     except httpx.RequestError as e:
         logger.error(f"Failed to fetch schema from {name}: {e}")
-        return name, None
-
+    # except httpx.HTTPStatusError as e:
+    #     logger.error(f"HTTP error from {name}: {response.text}")
+    #     return name, None
 
 @app.get("/openapi.json")
 async def consolidated_openapi():

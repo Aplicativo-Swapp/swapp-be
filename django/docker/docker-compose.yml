@@ -10,7 +10,8 @@ services:
       POSTGRES_DB: kong
       POSTGRES_PASSWORD: kong
     networks:
-      - app_network
+      app_network:
+        ipv4_address: 172.28.1.2
     volumes:
       - kong_data:/var/lib/postgresql/data
 
@@ -41,7 +42,8 @@ services:
       - "8443:8443" # Public API requests (HTTPS)
       - "8444:8444" # Admin API (HTTPS)
     networks:
-      - app_network
+      app_network:
+        ipv4_address: 172.28.1.3
     depends_on:
       - kong-database
 
@@ -52,8 +54,10 @@ services:
     ports:
       - "6379:6379"
     networks:
-      - app_network
+      app_network:
+        ipv4_address: 172.28.1.4
 
+  # Auth Service
   auth_service:
     build:
       context: ../auth_service
@@ -72,10 +76,12 @@ services:
     stdin_open: true
     tty: true
     networks:
-      - app_network
+      app_network:
+        ipv4_address: 172.28.1.5
     # depends_on:
     #   - db
 
+  # Profile Service
   profile_service:
     build:
       context: ../profile_service
@@ -95,10 +101,12 @@ services:
     stdin_open: true
     tty: true
     networks:
-      - app_network
+      app_network:
+        ipv4_address: 172.28.1.6
     # depends_on:
     #   - db
 
+  # Trade Service
   trade_service:
     build:
       context: ../trade_service
@@ -118,10 +126,12 @@ services:
     stdin_open: true
     tty: true
     networks:
-      - app_network
+      app_network:
+        ipv4_address: 172.28.1.7
     # depends_on:
     #   - db
 
+  # Home Service
   home_service:
     build:
       context: ../home_service
@@ -141,7 +151,8 @@ services:
     stdin_open: true
     tty: true
     networks:
-      - app_network
+      app_network:
+        ipv4_address: 172.28.1.8
     # depends_on:
     #   - db
 
@@ -161,12 +172,22 @@ services:
       - PYTHONUNBUFFERED=1
     stdin_open: true
     tty: true
+    depends_on:
+      - auth_service
+      - profile_service
+      - trade_service
+      - home_service
     networks:
-      - app_network
+      app_network:
+        ipv4_address: 172.28.1.9
 
 networks:
   app_network:
     driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: "172.28.1.0/24"
 
 volumes:
   postgres_data:
