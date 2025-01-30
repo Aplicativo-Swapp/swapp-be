@@ -8,7 +8,7 @@ from users.tasks import send_user_update_email, send_user_delete_email, send_use
 
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework import status
+from rest_framework import status, generics
 from rest_framework.exceptions import AuthenticationFailed
 from rest_framework.permissions import IsAuthenticated
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -577,5 +577,59 @@ class UserChangePasswordView(APIView):
 
         return Response(
             {"message": "Senha alterada com sucesso!"},
+            status=status.HTTP_200_OK
+        )
+    
+class UserRetrieveView(generics.RetrieveAPIView):
+    """
+        Class to retrieve user information.
+    """
+
+    permission_classes = [IsAuthenticated]  # Require authentication
+    serializer_class = UserSerializer  # Use UserSerializer for serialization
+
+    @extend_schema(
+        summary="Retrieve user information",
+        description="Endpoint to retrieve user information.",
+        responses={
+            200: OpenApiTypes.OBJECT,
+            401: OpenApiTypes.OBJECT,
+        },
+        examples=[
+            OpenApiExample(
+                "Successful Response",
+                value={
+                    "first_name": "John",
+                    "last_name": "Doe",
+                    "email": "john.doe@example.com",
+                    "address": "Rua Nova, 123",
+                    "phone": "1234567890",
+                    "birth_date": "1990-01-01",
+                    "gender": "M",
+                    "is_active": True,
+                    "is_admin": False,
+                    "created_at": "2022-01-01T00:00:00Z",
+                    "updated_at": "2022-01-01T00:00:00Z",
+                },
+                status_codes=["200"],
+                response_only=True,
+            ),
+            OpenApiExample(
+                "Unauthorized",
+                value={
+                    "detail": "Usuário não autenticado.",
+                },
+                status_codes=["401"],
+                response_only=True,
+            ),
+        ]
+    )
+    def get(self, request, *args, **kwargs):
+        """
+            Handle GET request to retrieve user information.
+        """
+
+        return Response(
+            self.get_serializer(request.user).data,
             status=status.HTTP_200_OK
         )

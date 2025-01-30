@@ -16,7 +16,7 @@ class MessageSerializer(serializers.ModelSerializer):
     def get_sender_details(self, obj):
         """Obtém informações do usuário pelo auth_service"""
         return get_user_details(obj.sender_id)  # Retorna {'id': 1, 'name': 'John Doe', ...}
-
+    
 class ConversationSerializer(serializers.ModelSerializer):
     """
         Serializer for the Conversation model
