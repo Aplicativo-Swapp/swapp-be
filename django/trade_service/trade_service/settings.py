@@ -32,8 +32,10 @@ SECRET_KEY = os.getenv("DJANGO_SECRET_KEY")
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv("DJANGO_DEBUG", "False") == "True"
 
-# Application definition
+AUTH_USER_MODEL = 'users.User'
+AUTH_SERVICE_URL = "http://0.0.0.0:8000/api/users/"
 
+# Application definition
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -47,6 +49,7 @@ INSTALLED_APPS = [
     "drf_spectacular",
     "drf_spectacular_sidecar", 
     'django_celery_results',
+    'chat',
 ]
 
 MIDDLEWARE = [
